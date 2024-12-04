@@ -1,0 +1,7 @@
+fastapi[all]
+uvicorn
+transformers
+pydantic
+sqlalchemy
+python-dotenv
+aiofiles
