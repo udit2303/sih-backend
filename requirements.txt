@@ -6,3 +6,5 @@ sqlalchemy
 python-dotenv
 aiofiles
 motor
+python-jose
+passlib
