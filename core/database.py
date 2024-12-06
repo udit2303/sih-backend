@@ -2,6 +2,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from core.config import settings
 from bson import ObjectId
 from pymongo.errors import CollectionInvalid
+from aioredis import Redis
+import json
 from typing import Optional
 
 class MongoDB:
@@ -71,12 +73,16 @@ class MongoDB:
         result = await collection.delete_one(query)
         return {"deleted_count": result.deleted_count}
 
-db = MongoDB()  # MongoDB instance
 
-async def connect_to_mongo():
-    """Connect to MongoDB."""
+
+# Instances for MongoDB and Redis
+db = MongoDB()
+
+# Connection handlers
+async def connect_to_services():
+    """Connect to MongoDB"""
     await db.connect()
 
-async def close_mongo_connection():
-    """Close the connection to MongoDB."""
+async def close_services():
+    """Close connections to MongoDB """
     await db.close()

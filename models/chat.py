@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from bson import ObjectId
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -17,11 +17,16 @@ class PyObjectId(ObjectId):
     class Config:
         json_encoders = {ObjectId: str}
 
+class Message(BaseModel):
+    sender: str
+    message: str
+    timestamp: datetime = Field(default_factory=datetime.now(datetime.timezone.utc))
+
 class Chat(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    context_id: PyObjectId 
-    message: str
-    sender: str 
+    context_id: PyObjectId
+    user_id: PyObjectId 
+    chats: List[Message]  
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
