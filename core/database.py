@@ -2,7 +2,6 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from core.config import settings
 from bson import ObjectId
 from pymongo.errors import CollectionInvalid
-from aioredis import Redis
 import json
 from typing import Optional
 

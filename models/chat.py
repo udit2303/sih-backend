@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 class PyObjectId(ObjectId):
@@ -14,13 +14,14 @@ class PyObjectId(ObjectId):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
 
-    class Config:
-        json_encoders = {ObjectId: str}
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema):
+        schema.update(type="string")
 
 class Message(BaseModel):
     sender: str
     message: str
-    timestamp: datetime = Field(default_factory=datetime.now(datetime.timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Chat(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
@@ -30,6 +31,21 @@ class Chat(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+
+    @field_validator("id", mode="before", check_fields=False)
+    def validate_id(cls, v):
+        return PyObjectId.validate(v)
+
+    @field_validator("context_id", mode="before", check_fields=False)
+    def validate_context_id(cls, v):
+        return PyObjectId.validate(v)
+
+    @field_validator("user_id", mode="before", check_fields=False)
+    def validate_user_id(cls, v):
+        return PyObjectId.validate(v)
+
+    @staticmethod
+    def json_encoders():
+        return {ObjectId: str}

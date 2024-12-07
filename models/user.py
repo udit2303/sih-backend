@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import Optional
 from bson import ObjectId
 from datetime import datetime
@@ -15,18 +15,26 @@ class PyObjectId(ObjectId):
         return ObjectId(v)
 
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    def __get_pydantic_json_schema__(cls, schema):
+        schema.update(type="string")
+
 
 class User(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     name: str
-    email: str[EmailStr]
+    email: EmailStr
     password: str
     is_admin: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+
+    @field_validator("id", mode="before", check_fields=False)
+    def validate_id(cls, v):
+        return PyObjectId.validate(v)
+
+    @staticmethod
+    def json_encoders():
+        return {ObjectId: str}

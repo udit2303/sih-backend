@@ -1,9 +1,9 @@
-from aioredis import Redis
+import asyncio
+from redis.asyncio import Redis
 from bson import ObjectId
 from datetime import datetime
 from pymongo import ReturnDocument
 from pydantic import BaseModel
-import asyncio
 import json
 from core.database import db  
 # Redis Connection Manager
@@ -14,7 +14,7 @@ class RedisCache:
         self.client = Redis.from_url(redis_url, decode_responses=True)
     
     async def connect(self):
-        """Connect to Redis."""
+        """Connect to Redis and subscribe to key expiration events."""
         await self.client.config_set("notify-keyspace-events", "Ex")
         self.pubsub = self.client.pubsub()
         await self.pubsub.subscribe("__keyevent@0__:expired")
@@ -22,13 +22,15 @@ class RedisCache:
         print("Connected to Redis!")
     
     async def listen_for_evictions(self):
+        """Listen for Redis key eviction events and handle them."""
         async for message in self.pubsub.listen():
-            if message['type'] == 'message':
-                key = message['data'].decode('utf-8')
+            if message["type"] == "message":
+                key = message["data"]
                 await self.on_eviction(key)
 
     async def close(self):
         """Close the Redis connection."""
+        await self.pubsub.close()
         await self.client.close()
         print("Disconnected from Redis!")
 
@@ -49,6 +51,7 @@ class RedisCache:
         if not chat_document:
             return None
 
+        # Transform MongoDB data for caching
         chat_document["_id"] = str(chat_document["_id"])
         chat_document["context_id"] = str(chat_document["context_id"])
         chat_document["user_id"] = str(chat_document["user_id"])
@@ -69,7 +72,6 @@ class RedisCache:
             raise ValueError("Chat context not found.")
 
         # Update chats in memory
-
         chat_document["chats"].extend(new_chats)
         for message in new_chats:
             message["timestamp"] = message["timestamp"].isoformat()
@@ -124,4 +126,3 @@ async def initialize_services():
 async def close_services():
     await redis_cache.close()
     await db.close()
-

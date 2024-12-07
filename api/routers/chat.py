@@ -6,8 +6,8 @@ from models.chat import Chat, Message
 from models.context import Context
 from models.user import User
 from core.database import db
-from redis.database import redis_cache as cache
-from core.model import model
+from redisDB.database import redis_cache as cache
+# from core.model import model
 router = APIRouter()
 chat_collection  = db.chats_collection
 context_collection = db.contexts_collection
@@ -27,7 +27,8 @@ async def post_chat_to_context(context_id: str, chat_request: str, user: User = 
         "message": chat_request,
         "timestamp": datetime.now(datetime.timezone.utc)
     }]
-    ai_response = model.getResponse(chat_request)
+    # ai_response = model.getResponse(chat_request)
+    ai_response = "This is a placeholder response from the AI model"
     new_message.append({
         "sender": "bot",
         "message": ai_response,

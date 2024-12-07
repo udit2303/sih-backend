@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from bson import ObjectId
 from datetime import datetime
 from typing import Optional
@@ -14,8 +14,9 @@ class PyObjectId(ObjectId):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
 
-    class Config:
-        json_encoders = {ObjectId: str}
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema):
+        schema.update(type="string")
 
 class Context(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
@@ -25,6 +26,17 @@ class Context(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+
+    @field_validator("id", mode="before", check_fields=False)
+    def validate_id(cls, v):
+        return PyObjectId.validate(v)
+
+    @field_validator("user_id", mode="before", check_fields=False)
+    def validate_user_id(cls, v):
+        return PyObjectId.validate(v)
+
+    @staticmethod
+    def json_encoders():
+        return {ObjectId: str}

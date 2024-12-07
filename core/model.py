@@ -23,3 +23,4 @@ class Model():
         })
         g = self.model.generate(**inputs)
         return g
+model = Model()
