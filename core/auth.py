@@ -36,7 +36,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
 async def verify_token(token: str) -> Union[User, None]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")  
+        email: str = payload.get("sub") 
         if email is None:
             return None
         

@@ -1,11 +1,12 @@
 import asyncio
 from redis.asyncio import Redis
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from pymongo import ReturnDocument
 from pydantic import BaseModel
 import json
 from core.database import db  
+from fastapi import HTTPException
 # Redis Connection Manager
 class RedisCache:
     """Redis caching and synchronization utility."""
@@ -40,15 +41,18 @@ class RedisCache:
         Retrieve chats from Redis for the given context and user ID.
         If not found, fetch from MongoDB, populate Redis, and return the data.
         """
+        print("Getting chats from Redis...")
         redis_key = f"{context_id}:user:{user_id}"
+        print(redis_key)
         chats_json = await self.client.get(redis_key)
 
         if chats_json:
             return json.loads(chats_json)
-        
+        print(context_id, user_id)
         chat_document = await db.chats_collection.find_one(
             {"context_id": ObjectId(context_id), "user_id": ObjectId(user_id)}
         )
+        print(chat_document)
         if not chat_document:
             return None
 
@@ -62,7 +66,7 @@ class RedisCache:
         await self.client.set(redis_key, json.dumps(chat_document), ex=3600)
         return chat_document
 
-    async def update(self, context_id: str, user_id: str, new_chats: list):    
+    async def update(self, context_id: str, user_id: str, new_chats: list[dict]):    
         """
         Update chats in Redis and MongoDB for the given context and user ID.
         """
@@ -70,15 +74,27 @@ class RedisCache:
         chat_document = await self.get(context_id, user_id)  # Fetch current data
 
         if not chat_document:
-            raise ValueError("Chat context not found.")
+            raise HTTPException(status_code=404, detail="Chat context not found for this user")
 
         # Update chats in memory
-        chat_document["chats"].extend(new_chats)
         for message in new_chats:
-            message["timestamp"] = message["timestamp"].isoformat()
+            message["timestamp"] = datetime.now(timezone.utc).isoformat()
+        chat_document["chats"].extend(new_chats)
 
         # Update Redis
         await self.client.set(redis_key, json.dumps(chat_document), ex=3600)
+
+        # Update MongoDB
+        try:
+            await db.chats_collection.find_one_and_update(
+                {"context_id": ObjectId(context_id), "user_id": ObjectId(user_id)},
+                {"$set": {"chats": chat_document["chats"]}},
+                return_document=ReturnDocument.AFTER,
+                upsert=True
+            )
+        except Exception as e:
+            print(f"Error updating MongoDB: {e}")
+
 
     async def periodic_sync(self, interval: int = 600):
         """

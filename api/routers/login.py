@@ -41,14 +41,16 @@ async def signup(user: UserCreate):
         "created_at": datetime.now(timezone.utc)
     }
     result = await users_collection.insert_one(new_user)
+    access_token = create_access_token(
+        data={"sub": str(existing_user["_id"])}
+    )
 
-    return {"msg": "User created successfully", "user_id": str(result.inserted_id)}
+    return {"msg": "User created successfully", "user_id": str(result.inserted_id), "access_token": access_token, "token_type": "bearer"}
 
 # Login Route
 @router.post("/login")
 async def login(user: UserLogin):
     users_collection = db.get_collection("users")
-
     # Find user by email
     existing_user = await users_collection.find_one({"email": user.email})
     if not existing_user:
@@ -60,6 +62,6 @@ async def login(user: UserLogin):
 
     # Create JWT token
     access_token = create_access_token(
-        data={"sub": str(existing_user["_id"])}
+        data={"sub": str(existing_user["email"])}
     )
     return {"access_token": access_token, "token_type": "bearer"}

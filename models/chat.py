@@ -21,6 +21,7 @@ class PyObjectId(ObjectId):
 class Message(BaseModel):
     sender: str
     message: str
+    image: Optional[str] = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Chat(BaseModel):
@@ -28,7 +29,6 @@ class Chat(BaseModel):
     context_id: PyObjectId
     user_id: PyObjectId 
     chats: List[Message]  
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
         populate_by_name = True

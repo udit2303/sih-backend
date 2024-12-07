@@ -9,7 +9,6 @@ async def get_current_user(request: Request) -> User:
     token = request.headers.get("Authorization")
     if not token:
         raise HTTPException(status_code=403, detail="Authorization token is missing")
-    
     token = token.split(" ")[1] if token.startswith("Bearer ") else token
     user = await verify_token(token)
     if not user:

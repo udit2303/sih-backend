@@ -22,7 +22,6 @@ class Context(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     user_id: PyObjectId  
     title: str
-    image_url: Optional[str] = None 
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
