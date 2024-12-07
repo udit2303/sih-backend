@@ -12,6 +12,7 @@ class RedisCache:
     
     def __init__(self, redis_url: str):
         self.client = Redis.from_url(redis_url, decode_responses=True)
+        print("Redis client initialized.")
     
     async def connect(self):
         """Connect to Redis and subscribe to key expiration events."""

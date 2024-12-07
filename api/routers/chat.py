@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from models.chat import Chat, Message
 from models.context import Context
@@ -25,7 +25,7 @@ async def post_chat_to_context(context_id: str, chat_request: str, user: User = 
     new_message = [{
         "sender": "user",
         "message": chat_request,
-        "timestamp": datetime.now(datetime.timezone.utc)
+        "timestamp": datetime.now(timezone.utc)
     }]
     # ai_response = model.getResponse(chat_request)
     ai_response = "This is a placeholder response from the AI model"
@@ -64,3 +64,4 @@ async def create_context(create_request: Message, user: User = Depends()):
     contexts = await contexts_cursor.to_list(length=100)
 
     return {"msg": "Context created successfully", "contexts": contexts}
+

@@ -22,6 +22,7 @@ class MongoDB:
     async def connect(self):
         """Establish a connection to MongoDB and setup collections."""
         try:
+            print(settings)
             self.client = AsyncIOMotorClient(settings.database_url)
             self.database = self.client.get_database()
             self.users_collection = self.database.get_collection("users")
@@ -78,10 +79,10 @@ class MongoDB:
 db = MongoDB()
 
 # Connection handlers
-async def connect_to_services():
+async def connect():
     """Connect to MongoDB"""
     await db.connect()
 
-async def close_services():
+async def close():
     """Close connections to MongoDB """
     await db.close()

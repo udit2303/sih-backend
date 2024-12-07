@@ -6,7 +6,7 @@ from models.user import User
 from bson import ObjectId
 from jose import jwt 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from core.auth import create_access_token, verify_password, hash_password
 
 # Pydantic Models
@@ -38,7 +38,7 @@ async def signup(user: UserCreate):
         "email": user.email,
         "password": hashed_password,
         "is_admin": True if user.refCode == 1234 else False,    
-        "created_at": datetime.now(datetime.timezone.utc)
+        "created_at": datetime.now(timezone.utc)
     }
     result = await users_collection.insert_one(new_user)
 
