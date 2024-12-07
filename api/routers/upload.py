@@ -6,12 +6,12 @@ from models.user import User
 from core.database import db
 from bson import ObjectId
 import os
-
+from core.middleware import get_current_user
 router = APIRouter()
 
 # Image upload route
 @router.post("/upload/{context_id}")
-async def upload_image(context_id: str, file: UploadFile = File(...), user: User = Depends()):
+async def upload_image(context_id: str, file: UploadFile = File(...), user: User = Depends(get_current_user)):
     try:
         # Validate context ID with user ID
         context_collection = db.get_collection("contexts")

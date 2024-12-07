@@ -1,11 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from core.config import settings
 from api.routers.upload import router as upload_router
 from api.routers.chat import router as chat_router
 from api.routers.train import router as train_router
 from api.routers.login import router as login_router
 from fastapi.middleware.cors import CORSMiddleware
-from core.middleware import JWTAuthenticationMiddleware
+# from core.middleware import JWTAuthenticationMiddleware
 from redisDB.database import initialize_services
 app = FastAPI(debug=settings.debug)
 
@@ -16,7 +17,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(JWTAuthenticationMiddleware, protected_paths=["/api/chat", "/api/train", "/api/upload"])
+# app.add_middleware(JWTAuthenticationMiddleware, protected_paths=[])
 
 app.include_router(upload_router, prefix="/api/upload", tags=["Upload"])
 app.include_router(train_router, prefix="/api/train", tags=["Training"])  # Example for the training route
