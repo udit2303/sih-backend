@@ -8,7 +8,7 @@ aiofiles
 motor
 python-jose
 passlib
-aioredis
+redis
 torch
 torchvision
 icecream
